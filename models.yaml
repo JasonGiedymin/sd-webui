@@ -1,0 +1,8 @@
+hf_token_rw: 'env.HF_TOKEN_RW'
+hf_token_ro: 'env.HF_TOKEN_RO'
+cache_dir: './model_cache'
+
+models:
+  - name: 'gfhat based on sd 1.5 v1.1'
+    repo_id: 'JasonGiedymin/1-5-gfhat-v1-1'
+    filename: 'model.ckpt'

@@ -1,0 +1,4 @@
+.venv
+env
+model_cache
+*.bak
