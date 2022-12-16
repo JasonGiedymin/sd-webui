@@ -4,32 +4,65 @@ set -e
 
 source ./env
 
+# checks
+if [ -z "$(which huggingface-cli)" ]; then
+  echo "Looks like you may need to source the .venv."
+  echo "  source ./venv/bin/activate"
+  exit 1;
+fi;
+
 export VERSION=${VERSION:-"2"}
 
-map_models() {
-  container_dir="/sd/models/Stable-diffusion/"
-  models=$(huggingface-cli scan-cache --dir model_cache -v | grep model | awk -F ' ' '{print $10}')
-  for model in $models
-  do
-    model_name=$(echo "$model" | awk -F '/' '{print $7}' | awk -F 'models--' '{print $2}')
-    echo "-v $model/model.ckpt:$container_dir$model_name.ckpt"
-  done
+clean_vols() {
+  echo "Cleaning up volumes ..."
+  rm -vRf ./volumes/
 }
 
-# run() {
-#   docker_command="docker run -it --rm --name=sd-webui \
-#     --network=host \
-#     --device=/dev/kfd \
-#     --device=/dev/dri \
-#     --group-add=video \
-#     --ipc=host \
-#     --cap-add=SYS_PTRACE \
-#     --security-opt seccomp=unconfined \
-#     $(map_models) \
-#     sd:${VERSION}"
+prep_vols() {
+  echo "Prepping volumes ..."
+  mkdir -vp $(pwd)/volumes/venv
+  mkdir -vp $(pwd)/volumes/repositories
+  mkdir -vp $(pwd)/volumes/models
+  mkdir -vp $(pwd)/volumes/ldm
+  mkdir -vp $(pwd)/volumes/cache
+
+  container_id=$(docker create sd:${VERSION})
+  echo "Started base container [$container_id] for file copy ..."
   
-#   eval "$docker_command"
+  echo "Copying venv files ..."
+  docker cp $container_id:/sd/venv/ $(pwd)/volumes/
+
+  # echo "Copying repository files ..."
+  # docker cp $container_id:/sd/repositories/ $(pwd)/volumes/repositories
+
+  echo "Removing [$container_id] ..."
+  docker rm -v $container_id
+  echo "Size: $(du -h -d 0 ./volumes/)"
+  echo "Done."
+}
+
+# map_models() {
+#   container_dir="/sd/models/Stable-diffusion/"
+#   models=$(huggingface-cli scan-cache --dir model_cache -v | grep model | awk -F ' ' '{print $10}')
+#   output_str=""
+#   for model in $models
+#   do
+#     model_name=$(echo "$model" | awk -F '/' '{print $7}' | awk -F 'models--' '{print $2}')
+#     output_str+="-v $model/model.ckpt:$container_dir$model_name.ckpt "
+#   done
+#   echo "$output_str"
 # }
+
+clean_models() {
+  if [ -e ./models ]; then
+    rm -vRf models
+  fi;
+  mkdir -vp models
+}
+
+download_models() {
+  ./models.py download --links
+}
 
 docker_command() {
   cat <<EOF
@@ -37,17 +70,88 @@ docker_command() {
     --network=host \
     --device=/dev/kfd \
     --device=/dev/dri \
-    --group-add=video \
+    --group-add=video ${entrypoint_bypass} \
     --ipc=host \
     --cap-add=SYS_PTRACE \
     --security-opt seccomp=unconfined \
-    $(map_models) \
-    sd:${VERSION}
+    -e HF_HOME=/sd/.cache \
+    -e HUGGING_FACE_HUB_TOKEN="$HF_TOKEN_RO" \
+    -v $(pwd)/volumes/extensions:/sd/extensions \
+    -v $(pwd)/volumes/venv:/sd/venv \
+    -v $(pwd)/volumes/repositories:/sd/repositories \
+    -v $(pwd)/volumes/models:/sd/models \
+    -v $(pwd)/volumes/ldm:/sd/ldm \
+    -v $(pwd)/volumes/cache:/sd/.cache \
+    -v $(pwd)/images:/sd/images \
+    -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
+    -v $(pwd)/models:/sd/models/Stable-diffusion \
+    sd:${VERSION} ${cmd}
 EOF
 }
 
-run() {
+usage() {
+  cat << EOF
+
+  Usage:
+
+    ./run {help|prep|build|ui|models|clean|reset|test}
+
+    ------------------------------------------------------------------
+    help   - this usage screen
+    build  - build a new docker image
+    prep   - prep files, useful if you need to refresh from a new build
+    ui     - loads the ui
+    models - downloads and links models
+    clean  - cleans out volumes only
+    reset  - resets volumes by running clean and prep
+    test   - runs a shell that bypasses the entrypoint for testing
+
+EOF
+}
+
+run_ui() {
   eval "$(docker_command)"
 }
 
-run
+run_test() {
+  export entrypoint_bypass="--entrypoint=''"
+  export cmd="bash"
+  eval "$(docker_command)"
+}
+
+run_build() {
+  docker build --tag sd:${VERSION} ./
+}
+
+run() {
+  case $@ in
+    build)
+      run_build
+      ;;
+    ui)
+      run_ui
+      ;;
+    test)
+      run_test
+      ;;
+    prep)
+      prep_vols
+      ;;
+    clean)
+      clean_vols
+      ;;
+    reset)
+      clean_vols
+      prep_vols
+      ;;
+    models)
+      download_models
+      ;;
+    *)
+      usage
+      exit 1;
+      ;;
+  esac
+}
+
+run $@

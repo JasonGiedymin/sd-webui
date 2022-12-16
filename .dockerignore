@@ -1,1 +1,6 @@
+.venv
 model_cache/
+models/
+volumes/
+images/
+temp/

@@ -1,8 +1,33 @@
+# tokens
 hf_token_rw: 'env.HF_TOKEN_RW'
 hf_token_ro: 'env.HF_TOKEN_RO'
+
+# huggingface cache
 cache_dir: './model_cache'
 
+# where we will symlink models and configs to for use in docker or for webui
+models_dir: './models'
+
+configs:
+  - name: 'v2'
+    url: 'https://raw.githubusercontent.com/Stability-AI/stablediffusion/main/configs/stable-diffusion/v2-inference-v.yaml'
+
 models:
-  - name: 'gfhat based on sd 1.5 v1.1'
+  - name: 'gfhat based on sd 1.5 - v1.1'
     repo_id: 'JasonGiedymin/1-5-gfhat-v1-1'
     filename: 'model.ckpt'
+
+  - name: 'gfhat based on sd 2.0 - v2'
+    repo_id: 'JasonGiedymin/2-0-gfhat-v1'
+    filename: 'model.ckpt'
+    enabled: False
+
+  - name: 'Stable Diffusion v2'
+    repo_id: 'stabilityai/stable-diffusion-2'
+    filename: '768-v-ema.ckpt'
+    config: 'v2'
+
+  - name: 'Stable Diffusion v2.1'
+    repo_id: 'stabilityai/stable-diffusion-2-1'
+    filename: 'v2-1_768-ema-pruned.ckpt'
+    config: 'v2'
