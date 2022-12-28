@@ -41,18 +41,6 @@ prep_vols() {
   echo "Done."
 }
 
-# map_models() {
-#   container_dir="/sd/models/Stable-diffusion/"
-#   models=$(huggingface-cli scan-cache --dir model_cache -v | grep model | awk -F ' ' '{print $10}')
-#   output_str=""
-#   for model in $models
-#   do
-#     model_name=$(echo "$model" | awk -F '/' '{print $7}' | awk -F 'models--' '{print $2}')
-#     output_str+="-v $model/model.ckpt:$container_dir$model_name.ckpt "
-#   done
-#   echo "$output_str"
-# }
-
 clean_models() {
   if [ -e ./models ]; then
     rm -vRf models
