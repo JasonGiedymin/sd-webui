@@ -1,0 +1,8 @@
+--- venv/lib/python3.8/site-packages/torch/version.py	2022-12-15 05:50:58.000000000 +0000
++++ venv/lib/python3.8/site-packages/torch/version2.py	2022-12-29 03:57:00.435909148 +0000
+@@ -1,4 +1,4 @@
+-__version__ = '1.13.1+rocm5.2'
++__version__ = '1.13.1'
+ debug = False
+ cuda = None
+ git_version = '49444c3e546bf240bed24a101e747422d1f8a0ee'

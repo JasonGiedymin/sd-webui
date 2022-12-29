@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
-import sys
 import os
+from pathlib import Path
 import requests
+from requests.exceptions import HTTPError
 import shutil
 import subprocess
+import sys
+from tqdm import tqdm
 from time import sleep
-from pathlib import Path
 from os import path
 import yaml
 
@@ -37,6 +39,27 @@ def checkDupes(yamlConfig):
             config_items.append(url)
             config_names.append(name)
 
+    raw_names = []
+    raw_items = []
+    rawModelDupeFound = False
+    for idx, model in enumerate(yamlConfig['raw_models']):
+        name = model['name']
+        url = model['url']
+        filename = model['filename']
+        if url in raw_items or name in raw_names:
+            print(f'raw model dupe found at entry #[{idx+1}]. Please correct.')
+            rawModelDupeFound = True
+        else:
+            if url == None or len(url) <= 0:
+                msg = f'Empty url found for raw model entry #[{idx+1}]. Please correct.'
+                sys.exit(msg)
+            if filename == None or len(filename) <= 0:
+                msg = f'Empty filename found for entry #[{idx+1}], you must specify a filename to write as.'
+                sys.exit(msg)
+
+            raw_items.append(url)
+            raw_names.append(name)
+
     model_items = []
     modelDupeFound = False
     for idx, model in enumerate(yamlConfig['models']):
@@ -62,6 +85,10 @@ def checkDupes(yamlConfig):
     # do this so we can get all the dupes, not just one
     if modelDupeFound and configDupeFound:
         msg = f'A duplicate entry in both the model and config lists was found. Please correct it.'
+        sys.exit(msg)
+    
+    if rawModelDupeFound:
+        msg = f'A duplicate entry in the raw model list was found. Please correct it.'
         sys.exit(msg)
 
     if modelDupeFound:
@@ -109,6 +136,11 @@ def checkConfig(yamlConfig):
         print(f'creating configs dir: {configs_dir}')
         Path(configs_dir).mkdir()
     
+    raw_models_dir = f"{yamlConfig['cache_dir']}/raw_models"
+    if not path.exists(raw_models_dir):
+        print(f'creating raw models dir: {raw_models_dir}')
+        Path(raw_models_dir).mkdir()
+    
     checkDupes(yamlConfig)
     
     return token_ro
@@ -151,6 +183,8 @@ def findRelativePath(path, cache_dir):
             return "/".join(dirs[idx:])
 
 def queryModel(stdout_lines, model, cache_dir):
+    # debounce query by 0.5 seconds
+    sleep(0.5)
     repo_id = model['repo_id']
     c_repo_id = 0
     c_refs = 8
@@ -158,7 +192,15 @@ def queryModel(stdout_lines, model, cache_dir):
     
     for line in stdout_lines:
         columns = line.split()
-        if len(columns) > (c_refs) and repo_id == columns[c_repo_id] and 'main' == columns[c_refs]:
+        
+        if len(columns) < (c_refs):
+            continue
+
+        if repo_id != columns[c_repo_id]:
+            continue
+
+        # the difference is '1 second ago' (len=3) and 'a few seconds ago' (len=4), so add 1
+        if 'main' == columns[c_refs] or 'main' == columns[c_refs+1]:
             # don't return fully qualified paths, instead return
             # relative so that we can mount it with docker
             return findRelativePath(columns[c_local_path], cache_dir)
@@ -170,6 +212,43 @@ def findConfig(name, configs):
     for config in configs:
         if config['name'] == name:
             return config
+
+def linkRawModel(model, configs, cache_dir, models_dir):
+    # filename and slug
+    enabled = model.get('enabled', True)
+    ref_config = model.get('config', '')
+    filename = model['filename']
+    full_model_path = f'./{cache_dir}/{filename}'
+    model_dest = f'./{models_dir}/{filename}'  # where we'll symlink to later
+
+    if len(ref_config) > 0:
+        # don't assume, just get the extension
+        config = findConfig(ref_config, configs)
+        config_ext = config['url'].split('.')[-1]
+        slug_config = slugify(filename, config_ext)
+        full_config_path = f'./{cache_dir}/configs/{config["url"].split("/")[-1]}'
+        config_dest = f'./{models_dir}/{slug_config}'  # where we'll symlink to later
+        
+        # create model symlink
+        if Path(model_dest).is_symlink():
+            os.remove(model_dest)
+        if enabled:
+            os.symlink(full_model_path, model_dest)
+        
+        # create config symlink
+        if Path(config_dest).is_symlink():
+            os.remove(config_dest)        
+        os.symlink(full_config_path, config_dest)
+
+        if enabled:
+            print(f'       link: [{full_model_path}] as [{models_dir}/{filename}] with config of [{ref_config}]')
+            print(f'       link: [{ref_config}] as [{models_dir}/{slug_config}]')
+    else:
+        if Path(model_dest).is_symlink():
+            os.remove(model_dest)
+        if enabled:
+            os.symlink(full_model_path, model_dest)
+            print(f'       link: [{full_model_path}] as [{models_dir}/{filename}]')
 
 def linkModel(model, configs, cache_dir, models_dir):
     # filename and slug
@@ -205,18 +284,14 @@ def linkModel(model, configs, cache_dir, models_dir):
         os.symlink(full_config_path, config_dest)
 
         if enabled:
-            print(f'       link: [{full_model_path}] as [{slug}] and config of [{ref_config}] to {models_dir}')
-            print(f'       link: [{ref_config}] as [{slug_config}] to {models_dir}')
+            print(f'       link: [{full_model_path}] as [{models_dir}/{slug}] with config of [{ref_config}]')
+            print(f'       link: [{ref_config}] as [{models_dir}/{slug_config}]')
     else:
         if Path(model_dest).is_symlink():
             os.remove(model_dest)
         if enabled:
             os.symlink(full_model_path, model_dest)
-            print(f'       link: [{full_model_path}] as [{slug}] to {models_dir}')
-
-# TODO: I don't like the filename
-# for each model create a symlink to models
-# if model['config'] was specified create a symlink for that to models, using the same name
+            print(f'       link: [{full_model_path}] as [{models_dir}/{slug}]')
 
 def downloadModelConfig(config, token, cache_dir):
     name = config['name']
@@ -238,9 +313,41 @@ def downloadModelConfig(config, token, cache_dir):
    filename: {filename}
     """)
 
-    # except Exception as exc:
-    #     print(f'Error trying to download config {name}, error: {exc}')
-    #     sys.exit()
+def downloadRawModel(raw_model, cache_dir):
+    name = raw_model['name']
+    url = raw_model['url']
+    filename = f'{cache_dir}/raw_models/{raw_model["filename"]}'
+
+    try:
+        if Path(filename).exists():
+            print(f'  Raw model: {filename} already exists, not overwriting. Delete and re-run if you want to update. Moving on ...')
+            return
+
+        print(f'\nDownloading: {url} as {filename} ...')
+        with requests.get(url, stream=True, allow_redirects=True) as r:
+            total_size_in_bytes= int(r.headers.get('content-length', 0))
+            block_size = 8192 #or 1024
+            progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
+            r.raise_for_status()
+            with open(filename, 'wb') as file:
+                for chunk in r.iter_content(chunk_size=8192): 
+                    progress_bar.update(len(chunk))
+                    file.write(chunk)
+            print(f"""
+     config: {name}
+        url: {url}
+   filename: {filename}
+    """)
+        progress_bar.close()
+        if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
+            msg = f"Error while attempting to download url {url}"
+            sys.exit(msg)
+    except HTTPError as exc:
+        code = exc.response.status_code
+        if code in [429, 500, 502, 503, 504]:
+            # retry after n seconds
+            sleep(10)
+        raise
 
 def na(value, default='n/a'):
     if len(value) > 0:
@@ -269,13 +376,20 @@ def downloadModel(model, token, cache_dir):
 
 def download(yamlConfig, token, shouldLink):
     cache_dir = yamlConfig['cache_dir']
+    raw_model_cache_dir = f'{cache_dir}/raw_models'
     models_dir = yamlConfig['models_dir']
     configs = yamlConfig['configs']
     models = yamlConfig['models']
+    raw_models = yamlConfig['raw_models']
 
     # download model configs first as we'll use them later for model linking
     for config in configs:
         downloadModelConfig(config, token, cache_dir)
+    
+    for raw_model in raw_models:
+        downloadRawModel(raw_model, cache_dir)
+        if shouldLink:
+            linkRawModel(raw_model, configs, raw_model_cache_dir, models_dir)
 
     # download models
     for model in models:

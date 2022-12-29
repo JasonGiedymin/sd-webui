@@ -1,0 +1,8 @@
+--- venv/lib/python3.8/site-packages/torchvision/version.py	2022-12-15 05:51:42.000000000 +0000
++++ venv/lib/python3.8/site-packages/torchvision/version2.py	2022-12-29 04:29:56.438969457 +0000
+@@ -1,4 +1,4 @@
+-__version__ = '0.14.1+rocm5.2'
++__version__ = '0.14.1'
+ git_version = '5e8e2f125f140d1e908cf424a6a85cacad758125'
+ from torchvision.extension import _check_cuda_version
+ if _check_cuda_version() > 0:

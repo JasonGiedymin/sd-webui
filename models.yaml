@@ -12,6 +12,16 @@ configs:
   - name: 'v2'
     url: 'https://raw.githubusercontent.com/Stability-AI/stablediffusion/main/configs/stable-diffusion/v2-inference-v.yaml'
 
+# See: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Extensions
+# extensions:
+#   - name:
+#     url:
+#     filename:
+
+# See: https://cyberes.github.io/stable-diffusion-textual-inversion-models/
+# embeddings:
+# 
+
 models:
   - name: 'gfhat based on sd 1.5 - v1.1'
     repo_id: 'JasonGiedymin/1-5-gfhat-v1-1'
@@ -31,3 +41,52 @@ models:
     repo_id: 'stabilityai/stable-diffusion-2-1'
     filename: 'v2-1_768-ema-pruned.ckpt'
     config: 'v2'
+
+  - name: 'Analog Diffusion v1'
+    repo_id: 'wavymulder/Analog-Diffusion'
+    filename: 'analog-diffusion-1.0.ckpt'
+    trigger: 'analog style'
+    negative: 'blur haze naked'
+  
+  - name: 'knollingcase v1'
+    repo_id: 'Aybeeceedee/knollingcase'
+    filename: 'knollingcase.ckpt'
+    trigger: 'knollingcase'
+    negative: ''
+
+raw_models:
+  - name: 'SynthwavePunk v3'
+    url: 'https://civitai.com/api/download/models/1144'
+    filename: 'synthwavepunk-v3.ckpt'
+    trigger: 'snthwve style, nvinkpunk'
+    docs: 'https://civitai.com/models/1102/synthwavepunk'
+  
+  - name: 'Allys Mix v1'
+    url: 'https://civitai.com/api/download/models/1259'
+    filename: 'allys-mix.safetensors'
+    trigger: 'None'
+    docs: 'https://civitai.com/models/1202/the-allys-mix'
+
+  - name: 'Elldreths v1'
+    url: 'https://civitai.com/api/download/models/1336'
+    filename: 'elldreths-v1.ckpt'
+    trigger: 'None'
+    docs: 'https://civitai.com/models/1259/elldreths-og-4060-mix'
+
+  - name: 'Healys Anime v1.7'
+    url: 'https://civitai.com/api/download/models/1498'
+    filename: 'healys-anime-v1-7.ckpt'
+    trigger: 'None'
+    docs: 'https://civitai.com/models/1400/healys-anime-blend'
+  
+  - name: 'Arcane Diffusion v3'
+    url: 'https://civitai.com/api/download/models/25'
+    filename: 'arcane-diffusion-v3.ckpt'
+    trigger: 'arcane style'
+    docs: 'https://civitai.com/models/23/arcane-diffusion'
+  
+  - name: 'Elldreths Vivid Mix'
+    url: 'https://civitai.com/api/download/models/3038'
+    filename: 'elldreths-vivid-mix-v1.safetensors'
+    trigger: 'None'
+    docs: 'https://civitai.com/models/2747/elldreths-vivid-mix'

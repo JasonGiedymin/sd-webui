@@ -26,6 +26,10 @@ prep_vols() {
   mkdir -vp $(pwd)/volumes/ldm
   mkdir -vp $(pwd)/volumes/cache
 
+  ## currently mapping extensions results in a link issue with trying to move a directory from
+  ## /sd/tmp to /sd/extensions
+  # mkdir -vp $(pwd)/volumes/extensions
+
   container_id=$(docker create sd:${VERSION})
   echo "Started base container [$container_id] for file copy ..."
   
@@ -64,15 +68,17 @@ docker_command() {
     --security-opt seccomp=unconfined \
     -e HF_HOME=/sd/.cache \
     -e HUGGING_FACE_HUB_TOKEN="$HF_TOKEN_RO" \
-    -v $(pwd)/volumes/extensions:/sd/extensions \
+    -v $(pwd)/docker/entrypoint.sh:/sd/entrypoint.sh \
     -v $(pwd)/volumes/venv:/sd/venv \
     -v $(pwd)/volumes/repositories:/sd/repositories \
     -v $(pwd)/volumes/models:/sd/models \
     -v $(pwd)/volumes/ldm:/sd/ldm \
     -v $(pwd)/volumes/cache:/sd/.cache \
+    -v $(pwd)/volumes/extensions:/sd/extensions \
     -v $(pwd)/images:/sd/images \
     -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
     -v $(pwd)/models:/sd/models/Stable-diffusion \
+    -v $(pwd)/docker/patches:/sd/patches \
     sd:${VERSION} ${cmd}
 EOF
 }
@@ -82,7 +88,7 @@ usage() {
 
   Usage:
 
-    ./run {help|prep|build|ui|models|clean|reset|test}
+    ./run {help|prep|build|ui|models|clean|reset|test|config}
 
     ------------------------------------------------------------------
     help   - this usage screen
@@ -92,7 +98,8 @@ usage() {
     models - downloads and links models
     clean  - cleans out volumes only
     reset  - resets volumes by running clean and prep
-    test   - runs a shell that bypasses the entrypoint for testing
+    shell  - runs a shell that bypasses the entrypoint for manual work
+    config - test the config
 
 EOF
 }
@@ -101,10 +108,14 @@ run_ui() {
   eval "$(docker_command)"
 }
 
-run_test() {
+run_shell() {
   export entrypoint_bypass="--entrypoint=''"
   export cmd="bash"
   eval "$(docker_command)"
+}
+
+run_config_check() {
+  ./models.py check
 }
 
 run_build() {
@@ -119,8 +130,11 @@ run() {
     ui)
       run_ui
       ;;
-    test)
-      run_test
+    shell)
+      run_shell
+      ;;
+    config)
+      run_config_check
       ;;
     prep)
       prep_vols
