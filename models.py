@@ -184,7 +184,7 @@ def findRelativePath(path, cache_dir):
 
 def queryModel(stdout_lines, model, cache_dir):
     # debounce query by 0.5 seconds
-    sleep(0.5)
+    # sleep(1)
     repo_id = model['repo_id']
     c_repo_id = 0
     c_refs = 8
@@ -200,10 +200,12 @@ def queryModel(stdout_lines, model, cache_dir):
             continue
 
         # the difference is '1 second ago' (len=3) and 'a few seconds ago' (len=4), so add 1
-        if 'main' == columns[c_refs] or 'main' == columns[c_refs+1]:
-            # don't return fully qualified paths, instead return
-            # relative so that we can mount it with docker
+        # don't return fully qualified paths, instead return
+        # relative so that we can mount it with docker
+        if 'main' == columns[c_refs]:
             return findRelativePath(columns[c_local_path], cache_dir)
+        if 'main' == columns[c_refs+1]:
+            return findRelativePath(columns[c_local_path+1], cache_dir)
     
     msg = f'Could not find a model to link, repo_id: [{repo_id}]. Perhaps the download failed?'
     raise Exception(msg)
@@ -250,17 +252,43 @@ def linkRawModel(model, configs, cache_dir, models_dir):
             os.symlink(full_model_path, model_dest)
             print(f'       link: [{full_model_path}] as [{models_dir}/{filename}]')
 
+def queryModelOnHub(model, cache_dir):
+    '''
+    Due to slow disk or very busy IO, this pause may help.
+    Otherwise things will run fine and fast.
+    '''
+    tries = 0
+    limit = 10
+    wait_time = 30  # seconds
+    while tries < limit:
+        # data from output after querying hub
+        stdout_lines = queryHub(cache_dir)
+        # model_local_path = queryModel(stdout_lines, model, cache_dir)
+        model_local_path = queryModel(stdout_lines, model, cache_dir)
+        if model_local_path == None:
+            tries = tries + 1
+            print('!? Could not yet find model in question, running query again in {wait_time} second(s) ... !?')
+            print(f'\n\n\n{stdout_lines}\n\n\n')
+            sleep(wait_time)
+        else:
+            return model_local_path
+
 def linkModel(model, configs, cache_dir, models_dir):
     # filename and slug
+    tries=0
     enabled = model.get('enabled', True)
     ref_config = model.get('config', '')
     filename = model['filename']
     ext = filename.split('.')[-1]
     slug = slugify(model['repo_id'], ext)  # what we'll actually call the file rather than model.ckpt
 
-    # data from output after querying hub
-    stdout_lines = queryHub(cache_dir)
-    model_local_path = queryModel(stdout_lines, model, cache_dir)
+    model_local_path = queryModelOnHub(model, cache_dir)
+
+    if model_local_path is None:
+        msg = f'error with model_local_path, found None ...'
+        print(msg)
+        sys.exit(msg)
+
     full_model_path = f'./{model_local_path}/{filename}'
     model_dest = f'./{models_dir}/{slug}'  # where we'll symlink to later
 

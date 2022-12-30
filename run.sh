@@ -8,7 +8,8 @@ source ./env
 if [ -z "$(which huggingface-cli)" ]; then
   echo "Looks like you may need to source the .venv."
   echo "  source ./venv/bin/activate"
-  exit 1;
+  echo "Otherwise doing it manually here now ..."
+  source ./.venv/bin/activate
 fi;
 
 export VERSION=${VERSION:-"2"}
@@ -25,6 +26,7 @@ prep_vols() {
   mkdir -vp $(pwd)/volumes/models
   mkdir -vp $(pwd)/volumes/ldm
   mkdir -vp $(pwd)/volumes/cache
+  mkdir -vp $(pwd)/volumes/embeddings
 
   ## currently mapping extensions results in a link issue with trying to move a directory from
   ## /sd/tmp to /sd/extensions
@@ -57,6 +59,8 @@ download_models() {
 }
 
 docker_command() {
+  # -v $(pwd)/volumes/extensions:/sd/extensions \
+
   cat <<EOF
   docker run -it --rm --name=sd-webui \
     --network=host \
@@ -74,7 +78,7 @@ docker_command() {
     -v $(pwd)/volumes/models:/sd/models \
     -v $(pwd)/volumes/ldm:/sd/ldm \
     -v $(pwd)/volumes/cache:/sd/.cache \
-    -v $(pwd)/volumes/extensions:/sd/extensions \
+    -v $(pwd)/volumes/embeddings:/sd/embeddings \
     -v $(pwd)/images:/sd/images \
     -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
     -v $(pwd)/models:/sd/models/Stable-diffusion \

@@ -11,7 +11,7 @@ models_dir: './models'
 configs:
   - name: 'v2'
     url: 'https://raw.githubusercontent.com/Stability-AI/stablediffusion/main/configs/stable-diffusion/v2-inference-v.yaml'
-
+  
 # See: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Extensions
 # extensions:
 #   - name:
@@ -53,6 +53,104 @@ models:
     filename: 'knollingcase.ckpt'
     trigger: 'knollingcase'
     negative: ''
+  
+  - name: 'Cinematic Diffusion v1'
+    repo_id: 'Basunat/Cinematic-Diffusion'
+    filename: 'syberart.ckpt'
+    trigger: 'syberart'
+    negative: ''
+
+  - name: '3DKX v1b'
+    repo_id: 'HavoAloe/3DKX_1.0b'
+    filename: '3DKX_1.0b.ckpt'
+    trigger: 'A 3d render of'
+    example: 'A 3d render of a cute tiny little fluffy monster with googly eyes running in a huge bedroom, antview, bokeh, closeup, highly detailed, 8K, stunning, hdr, subsurface scattering, global illumination, film still, Film-like, bokeh, 3d'
+    negative: ''
+  
+  - name: 'Elden Ring diffusion v3'
+    repo_id: 'nitrosocke/elden-ring-diffusion'
+    filename: 'eldenRing-v3-pruned.ckpt'
+    trigger: 'elden ring style'
+    example: ''
+    negative: ''
+  
+  - name: 'Future Diffusion'
+    repo_id: 'nitrosocke/Future-Diffusion'
+    filename: 'future-diffusion-v1.ckpt'
+    trigger: 'future style'
+    example: ''
+    negative: ''
+    config: 'v2'
+
+  - name: 'Redshift v1'
+    repo_id: 'nitrosocke/redshift-diffusion'
+    filename: 'redshift-diffusion-v1.ckpt'
+    trigger: 'redshift style'
+    example: ''
+    negative: ''
+  
+  - name: 'Archer v1'
+    repo_id: 'nitrosocke/archer-diffusion'
+    filename: 'archer-v1.ckpt'
+    trigger: 'archer style'
+    example: ''
+    negative: ''
+  
+  - name: 'Ghibli v1'
+    repo_id: 'nitrosocke/Ghibli-Diffusion'
+    filename: 'ghibli-diffusion-v1.ckpt'
+    trigger: 'ghibli style'
+    example: ''
+    negative: ''
+  
+  - name: 'Spiderverse v1'
+    repo_id: 'nitrosocke/spider-verse-diffusion'
+    filename: 'spiderverse-v1-pruned.ckpt'
+    trigger: 'spiderverse style'
+    example: ''
+    negative: ''
+  
+  - name: 'Classic Disney Style v1'
+    repo_id: 'nitrosocke/classic-anim-diffusion'
+    filename: 'classicAnim-v1.ckpt'
+    trigger: 'classic disney style'
+    example: ''
+    negative: ''
+  
+  - name: 'Combined Nitro Styles v1'
+    repo_id: 'nitrosocke/Nitro-Diffusion'
+    filename: 'nitroDiffusion-v1.ckpt'
+    trigger: 'archer style, arcane style or modern disney style'
+    example: ''
+    negative: ''
+  
+  - name: 'Modern Disney v1'
+    repo_id: 'nitrosocke/mo-di-diffusion'
+    filename: 'moDi-v1-pruned.ckpt'
+    trigger: 'modern disney style'
+    example: ''
+    negative: ''
+  
+  - name: 'Cyberpunk v1'
+    repo_id: 'DGSpitzer/Cyberpunk-Anime-Diffusion'
+    filename: 'Cyberpunk-Anime-Diffusion.safetensors'
+    trigger: 'anime'
+    example: 'a beautiful perfect face girl in dgs illustration style, Anime fine details portrait of school girl in front of modern tokyo city landscape on the background deep bokeh, anime masterpiece, 8k, sharp high quality anime'
+    negative: ''
+  
+  - name: 'Dreamlike'
+    repo_id: 'dreamlike-art/dreamlike-diffusion-1.0'
+    filename: 'dreamlike-diffusion-1.0.safetensors'
+    trigger: 'dreamlikeart'
+    example: ''
+    negative: ''
+  
+  - name: 'openjourney v2'
+    repo_id: 'prompthero/openjourney-v2'
+    filename: 'openjourney-v2.ckpt'
+    trigger: 'None'
+    example: ''
+    negative: ''
 
 raw_models:
   - name: 'SynthwavePunk v3'
@@ -90,3 +188,9 @@ raw_models:
     filename: 'elldreths-vivid-mix-v1.safetensors'
     trigger: 'None'
     docs: 'https://civitai.com/models/2747/elldreths-vivid-mix'
+
+  - name: 'Seekart Mega v1'
+    url: 'https://civitai.com/api/download/models/1456'
+    filename: 'seekart-mega-v1.safetensors'
+    trigger: 'None'
+    docs: 'https://civitai.com/models/1315/seekart-mega'
