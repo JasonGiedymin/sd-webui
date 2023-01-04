@@ -55,6 +55,7 @@ clean_models() {
 }
 
 download_models() {
+  sudo chown $USER:$USER -R volumes/models
   ./models.py download --links
 }
 

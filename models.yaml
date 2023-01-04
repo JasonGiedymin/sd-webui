@@ -13,14 +13,54 @@ configs:
     url: 'https://raw.githubusercontent.com/Stability-AI/stablediffusion/main/configs/stable-diffusion/v2-inference-v.yaml'
   
 # See: https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Extensions
-# extensions:
-#   - name:
-#     url:
-#     filename:
+# extensions
 
 # See: https://cyberes.github.io/stable-diffusion-textual-inversion-models/
-# embeddings:
-# 
+raw_embeddings:
+  - name: 'TungstenDispo v1'
+    url: 'https://civitai.com/api/download/models/3826'
+    filename: 'tungstendispo-v1-sd2.pt'
+    trigger: 'TungstenDispo'
+    negative: ''
+    example: ''
+    docs: 'https://civitai.com/models/3447/tungstendispo-embedding'
+    base: 'sd2'
+
+  - name: 'Zootopia 768 v4'
+    url: 'https://civitai.com/api/download/models/2774'
+    filename: 'zootopia-768-v4-sd2-1.pt'
+    trigger: 'Zootopiav4'
+    negative: ''
+    example: ''
+    docs: 'https://civitai.com/models/2498/zootopia-768'
+    base: 'sd2.1'
+  
+  - name: 'Style Moana'
+    url: 'https://civitai.com/api/download/models/3388'
+    filename: 'style-moana-sd1-5.pt'
+    trigger: 'style-moana'
+    negative: 'style-moana-neg (only if you want to temper effect)'
+    example: ''
+    docs: 'https://civitai.com/models/3084/style-moana'
+    base: 'sd1.5'
+  
+  - name: 'Kuvshinov'
+    url: 'https://civitai.com/api/download/models/219'
+    filename: 'kuvshinov-sd1-5.pt'
+    trigger: 'kuvshinov'
+    negative: ''
+    example: ''
+    docs: 'https://civitai.com/models/202/kuvshinov'
+    base: 'sd1.5'
+
+  - name: 'Char Turnaround Helper v1'
+    url: 'https://civitai.com/api/download/models/3334'
+    filename: 'char-turner-v1.pt'
+    trigger: 'charturner'
+    negative: ''
+    example: ''
+    docs: 'https://civitai.com/models/3036/charturner-character-turnaround-helper'
+    base: 'sd1.5, DPM++ 2m Karras or DDIM'
 
 models:
   - name: 'gfhat based on sd 1.5 - v1.1'
@@ -47,6 +87,12 @@ models:
     filename: 'analog-diffusion-1.0.ckpt'
     trigger: 'analog style'
     negative: 'blur haze naked'
+  
+  - name: 'WavyFusion'
+    repo_id: 'wavymulder/wavyfusion'
+    filename: 'wa-vy-fusion_1.0.safetensors'
+    trigger: 'wa-vy style'
+    negative: ''
   
   - name: 'knollingcase v1'
     repo_id: 'Aybeeceedee/knollingcase'
@@ -145,12 +191,27 @@ models:
     example: ''
     negative: ''
   
+  - name: 'OpenJourney v1 aka Mid Journey v4'
+    repo_id: 'prompthero/openjourney'
+    filename: 'mdjrny-v4.safetensors'
+    trigger: 'mdjrny-v4 style'
+    example: ''
+    negative: ''
+  
   - name: 'openjourney v2'
     repo_id: 'prompthero/openjourney-v2'
     filename: 'openjourney-v2.ckpt'
     trigger: 'None'
     example: ''
     negative: ''
+
+  - name: 'protogen v3.4'
+    repo_id: 'darkstorm2150/Protogen_x3.4_Official_Release'
+    filename: 'ProtoGen_X3.4.safetensors'
+    trigger: 'modelshoot style'
+    example: 'modelshoot style, (extremely detailed CG unity 8k wallpaper), full shot body photo of the most beautiful artwork in the world, english medieval witch, black silk vale, pale skin, black silk robe, black cat, necromancy magic, sexy, medieval era, photorealistic painting by Ed Blinkey, Atey Ghailan, Studio Ghibli, by Jeremy Mann, Greg Manchess, Antonio Moro, trending on ArtStation, trending on CGSociety, Intricate, High Detail, Sharp focus, dramatic, photorealistic painting art by midjourney and greg rutkowski'
+    negative: 'canvas frame, cartoon, 3d, ((disfigured)), ((bad art)), ((deformed)),((extra limbs)),((close up)),((b&w)), wierd colors, blurry, (((duplicate))), ((morbid)), ((mutilated)), [out of frame], extra fingers, mutated hands, ((poorly drawn hands)), ((poorly drawn face)), (((mutation))), (((deformed))), ((ugly)), blurry, ((bad anatomy)), (((bad proportions))), ((extra limbs)), cloned face, (((disfigured))), out of frame, ugly, extra limbs, (bad anatomy), gross proportions, (malformed limbs), ((missing arms)), ((missing legs)), (((extra arms))), (((extra legs))), mutated hands, (fused fingers), (too many fingers), (((long neck))), Photoshop, video game, ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, mutation, mutated, extra limbs, extra legs, extra arms, disfigured, deformed, cross-eye, body out of frame, blurry, bad art, bad anatomy, 3d render'
+    notes: 'Steps: 30, Sampler: DPM++ SDE Karras, CFG scale: 10, Seed: 1495009790, Face restoration: CodeFormer, Size: 760x1024, Model hash: 60fe2f34, Denoising strength: 0.5, First pass size: 0x0'
 
 raw_models:
   - name: 'SynthwavePunk v3'
@@ -165,12 +226,6 @@ raw_models:
     trigger: 'None'
     docs: 'https://civitai.com/models/1202/the-allys-mix'
 
-  - name: 'Elldreths v1'
-    url: 'https://civitai.com/api/download/models/1336'
-    filename: 'elldreths-v1.ckpt'
-    trigger: 'None'
-    docs: 'https://civitai.com/models/1259/elldreths-og-4060-mix'
-
   - name: 'Healys Anime v1.7'
     url: 'https://civitai.com/api/download/models/1498'
     filename: 'healys-anime-v1-7.ckpt'
@@ -183,14 +238,63 @@ raw_models:
     trigger: 'arcane style'
     docs: 'https://civitai.com/models/23/arcane-diffusion'
   
+  - name: 'Elldreths v1'
+    url: 'https://civitai.com/api/download/models/1336'
+    filename: 'elldreths-v1.ckpt'
+    trigger: 'None'
+    docs: 'https://civitai.com/models/1259/elldreths-og-4060-mix'
+  
   - name: 'Elldreths Vivid Mix'
     url: 'https://civitai.com/api/download/models/3038'
     filename: 'elldreths-vivid-mix-v1.safetensors'
     trigger: 'None'
     docs: 'https://civitai.com/models/2747/elldreths-vivid-mix'
+  
+  - name: 'Elldreths Retro Mix'
+    url: 'https://civitai.com/api/download/models/1575'
+    filename: 'elldreths-retro-mix-v1.safetensors'
+    trigger: 'GLEN ORBIK, EARLE BERGEY, ROBERT MAGUIRE, GIL ELVGREN'
+    docs: 'https://civitai.com/models/1474/elldreths-retro-mix'
 
   - name: 'Seekart Mega v1'
     url: 'https://civitai.com/api/download/models/1456'
     filename: 'seekart-mega-v1.safetensors'
     trigger: 'None'
     docs: 'https://civitai.com/models/1315/seekart-mega'
+  
+  - name: 'Protogen v2.2'
+    url: 'https://civitai.com/api/download/models/4007'
+    filename: 'protogen-v2-2.safetensors'
+    trigger: 'modelshoot style'
+    docs: 'https://civitai.com/models/3627/protogen-v22-official-release'
+  
+  - name: 'Comic Diffusion v2'
+    url: 'https://civitai.com/api/download/models/46'
+    filename: 'commic-diffusion-v2.safetensors'
+    trigger: 'comicmay artstyle'
+    enabled: False
+    docs: 'https://civitai.com/models/13/comic-diffusion'
+  
+  - name: 'Mafuyu Diffusion v1'
+    url: 'https://civitai.com/api/download/models/2997'
+    filename: 'mafuyu-diffusion.ckpt'
+    trigger: ''
+    example: '1girl, solo, long hair, breasts, looking at viewer, blush, smile, bangs, hair ornament, dress, bare shoulders, very long hair, closed mouth, purple eyes, braid, flower, small breasts, grey hair, outdoors, sky, sleeveless, pointy ears, cloud, hair flower, off shoulder, white dress, sleeveless dress, rose, own hands together, interlocked fingers, blue flower, blue rose'
+    negative: 'lowres, ((bad anatomy)), ((bad hands)), text, missing finger, extra digits, fewer digits, blurry, ((mutated hands and fingers)), (poorly drawn face), ((mutation)), ((deformed face)), (ugly), ((bad proportions)), ((extra limbs)), extra face, (double head), (extra head), ((extra feet)), monster, logo, cropped, worst quality, low quality, normal quality, jpeg, humpbacked, long body, long neck, ((jpeg artifacts))'
+    docs: 'https://civitai.com/models/2706/mafuyu-diffusion'
+  
+  - name: 'Portrait+'
+    url: 'https://civitai.com/api/download/models/2483'
+    filename: 'portrait-plus.ckpt'
+    trigger: 'portrait+'
+    example: ''
+    negative: ''
+    docs: 'https://civitai.com/models/2292/portrait'
+
+  - name: 'kuvshinov v1'
+    url: 'https://civitai.com/api/download/models/1299'
+    filename: 'kuvshinov-v1.ckpt'
+    trigger: 'kuvshinov'
+    example: ''
+    negative: ''
+    docs: 'https://civitai.com/models/1231/kuvshinov-style'

@@ -202,10 +202,12 @@ def queryModel(stdout_lines, model, cache_dir):
         # the difference is '1 second ago' (len=3) and 'a few seconds ago' (len=4), so add 1
         # don't return fully qualified paths, instead return
         # relative so that we can mount it with docker
-        if 'main' == columns[c_refs]:
-            return findRelativePath(columns[c_local_path], cache_dir)
-        if 'main' == columns[c_refs+1]:
-            return findRelativePath(columns[c_local_path+1], cache_dir)
+        if len(columns) > c_refs:
+            if 'main' == columns[c_refs]:
+                return findRelativePath(columns[c_local_path], cache_dir)
+        if len(columns) > c_refs+1:
+            if 'main' == columns[c_refs+1]:
+                return findRelativePath(columns[c_local_path+1], cache_dir)
     
     msg = f'Could not find a model to link, repo_id: [{repo_id}]. Perhaps the download failed?'
     raise Exception(msg)
@@ -341,6 +343,42 @@ def downloadModelConfig(config, token, cache_dir):
    filename: {filename}
     """)
 
+def downloadRawEmbedding(raw_item, dest_dir):
+    name = raw_item['name']
+    url = raw_item['url']
+    filename = f'{dest_dir}/{raw_item["filename"]}'
+
+    try:
+        if Path(filename).exists():
+            print(f'  Raw model: {filename} already exists, not overwriting. Delete and re-run if you want to update. Moving on ...')
+            return
+
+        print(f'\nDownloading: {url} as {filename} ...')
+        with requests.get(url, stream=True, allow_redirects=True) as r:
+            total_size_in_bytes= int(r.headers.get('content-length', 0))
+            block_size = 8192 #or 1024
+            progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
+            r.raise_for_status()
+            with open(filename, 'wb') as file:
+                for chunk in r.iter_content(chunk_size=8192): 
+                    progress_bar.update(len(chunk))
+                    file.write(chunk)
+            print(f"""
+      embed: {name}
+        url: {url}
+   filename: {filename}
+    """)
+        progress_bar.close()
+        if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
+            msg = f"Error while attempting to download url {url}"
+            sys.exit(msg)
+    except HTTPError as exc:
+        code = exc.response.status_code
+        if code in [429, 500, 502, 503, 504]:
+            # retry after n seconds
+            sleep(10)
+        raise
+
 def downloadRawModel(raw_model, cache_dir):
     name = raw_model['name']
     url = raw_model['url']
@@ -402,13 +440,23 @@ def downloadModel(model, token, cache_dir):
         print(f'Error trying to download model {model["name"]}, error: {exc}')
         sys.exit()
 
+def handleConfigs(configs, token, cache_dir):
+    # download model configs first as we'll use them later for model linking
+    for config in configs:
+        downloadModelConfig(config, token, cache_dir)
+
 def download(yamlConfig, token, shouldLink):
+    # dirs
     cache_dir = yamlConfig['cache_dir']
     raw_model_cache_dir = f'{cache_dir}/raw_models'
     models_dir = yamlConfig['models_dir']
+    embeddings_dir = f'./volumes/embeddings/'
+
+    # keys
     configs = yamlConfig['configs']
     models = yamlConfig['models']
     raw_models = yamlConfig['raw_models']
+    raw_embeddings = yamlConfig['raw_embeddings']
 
     # download model configs first as we'll use them later for model linking
     for config in configs:
@@ -424,6 +472,10 @@ def download(yamlConfig, token, shouldLink):
         downloadModel(model, token, cache_dir)
         if shouldLink:
             linkModel(model, configs, cache_dir, models_dir)
+    
+    # download embeddings
+    for raw_embedding in raw_embeddings:
+        downloadRawEmbedding(raw_embedding, embeddings_dir)
     
     print("Finished downloading models.")
 
