@@ -61,7 +61,7 @@ download_models() {
 
 docker_command() {
   # -v $(pwd)/volumes/extensions:/sd/extensions \
-
+  # -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
   cat <<EOF
   docker run -it --rm --name=sd-webui \
     --network=host \
@@ -81,7 +81,7 @@ docker_command() {
     -v $(pwd)/volumes/cache:/sd/.cache \
     -v $(pwd)/volumes/embeddings:/sd/embeddings \
     -v $(pwd)/images:/sd/images \
-    -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
+    -v $(pwd)/model_cache:/sd/model_cache \
     -v $(pwd)/models:/sd/models/Stable-diffusion \
     -v $(pwd)/docker/patches:/sd/patches \
     sd:${VERSION} ${cmd}

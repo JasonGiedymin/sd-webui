@@ -222,7 +222,7 @@ def linkRawModel(model, configs, cache_dir, models_dir):
     enabled = model.get('enabled', True)
     ref_config = model.get('config', '')
     filename = model['filename']
-    full_model_path = f'./{cache_dir}/{filename}'
+    full_model_path = f'../../{cache_dir}/{filename}'
     model_dest = f'./{models_dir}/{filename}'  # where we'll symlink to later
 
     if len(ref_config) > 0:
@@ -230,7 +230,7 @@ def linkRawModel(model, configs, cache_dir, models_dir):
         config = findConfig(ref_config, configs)
         config_ext = config['url'].split('.')[-1]
         slug_config = slugify(filename, config_ext)
-        full_config_path = f'./{cache_dir}/configs/{config["url"].split("/")[-1]}'
+        full_config_path = f'../../{cache_dir}/configs/{config["url"].split("/")[-1]}'
         config_dest = f'./{models_dir}/{slug_config}'  # where we'll symlink to later
         
         # create model symlink
@@ -291,7 +291,7 @@ def linkModel(model, configs, cache_dir, models_dir):
         print(msg)
         sys.exit(msg)
 
-    full_model_path = f'./{model_local_path}/{filename}'
+    full_model_path = f'../../{model_local_path}/{filename}'
     model_dest = f'./{models_dir}/{slug}'  # where we'll symlink to later
 
     if len(ref_config) > 0:
@@ -299,7 +299,7 @@ def linkModel(model, configs, cache_dir, models_dir):
         config = findConfig(ref_config, configs)
         config_ext = config['url'].split('.')[-1]
         slug_config = slugify(model['repo_id'], config_ext)
-        full_config_path = f'./{cache_dir}/configs/{config["url"].split("/")[-1]}'
+        full_config_path = f'../../{cache_dir}/configs/{config["url"].split("/")[-1]}'
         config_dest = f'./{models_dir}/{slug_config}'  # where we'll symlink to later
         
         # create model symlink
