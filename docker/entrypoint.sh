@@ -7,7 +7,7 @@ pip install -r requirements.txt
 
 source venv/bin/activate
 
-for file in ./patches/*
+for file in ./patches/*.patch
 do
   echo "Testing patch, pay no mind to patch errors between the lines ..."
   echo "--------------------------------------------------------------------"
@@ -17,7 +17,7 @@ do
     patch -N -p0 < $file
   else
     echo "--------------------------------------------------------------------"
-    echo "patch already applied, moving on ..."
+    echo "patch [$file] applied, moving on ..."
   fi;
 done;
 
