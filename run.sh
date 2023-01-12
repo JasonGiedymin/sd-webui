@@ -45,6 +45,10 @@ prep_vols() {
   docker rm -v $container_id
   echo "Size: $(du -h -d 0 ./volumes/)"
   echo "Done."
+
+  # ensure user owns all these files
+  # helps if user had to use sudo for cleaning
+  chown $USER:$USER -R $(pwd)/volumes/
 }
 
 clean_models() {
@@ -62,15 +66,16 @@ download_models() {
 docker_command() {
   # -v $(pwd)/volumes/extensions:/sd/extensions \
   # -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
+  #  --device=/dev/kfd \
+  #  --device=/dev/dri \
+  #  --group-add=video \
+  #  --ipc=host \
+  #  --cap-add=SYS_PTRACE \
+  #  --security-opt seccomp=unconfined \
   cat <<EOF
-  docker run -it --rm --name=sd-webui \
+  docker run -it --rm --name=sd-webui-nvidia \
+    --gpus all \
     --network=host \
-    --device=/dev/kfd \
-    --device=/dev/dri \
-    --group-add=video ${entrypoint_bypass} \
-    --ipc=host \
-    --cap-add=SYS_PTRACE \
-    --security-opt seccomp=unconfined \
     -e HF_HOME=/sd/.cache \
     -e HUGGING_FACE_HUB_TOKEN="$HF_TOKEN_RO" \
     -v $(pwd)/docker/entrypoint.sh:/sd/entrypoint.sh \
@@ -84,6 +89,7 @@ docker_command() {
     -v $(pwd)/model_cache:/sd/model_cache \
     -v $(pwd)/models:/sd/models/Stable-diffusion \
     -v $(pwd)/docker/patches:/sd/patches \
+    ${entrypoint_bypass} \
     sd:${VERSION} ${cmd}
 EOF
 }
@@ -93,16 +99,16 @@ usage() {
 
   Usage:
 
-    ./run {help|prep|build|ui|models|clean|reset|test|config}
+    ./run {help|build|ui|models|clean|prep|reset|test|config}
 
     ------------------------------------------------------------------
     help   - this usage screen
     build  - build a new docker image
-    prep   - prep files, useful if you need to refresh from a new build
     ui     - loads the ui
     models - downloads and links models
-    clean  - cleans out volumes only
-    reset  - resets volumes by running clean and prep
+    clean  - cleans out volumes only (not model cache) - do this for venv issues
+    prep   - prep files, useful if you need to refresh from a new build
+    reset  - resets volumes by running clean and prep commands
     shell  - runs a shell that bypasses the entrypoint for manual work
     config - test the config
 
@@ -124,7 +130,7 @@ run_config_check() {
 }
 
 run_build() {
-  docker build --tag sd:${VERSION} ./
+  docker build --tag sd:${VERSION} -f Dockerfile ./
 }
 
 run() {
