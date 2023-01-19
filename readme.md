@@ -3,7 +3,7 @@
 ## StableDiffusion For AMD
 
 - Compatible with AMD (verified on a 6900xt + rocM)
-- Reasonably fast, 2 seconds for a 512x512
+- Reasonably fast, with Euler a, 20 steps, 512x512 you can see `9.xx it/s`
 - Uses docker bind mounts for fast startup time
 - Comes with a unique script download models (it's very POC)
 

@@ -37,6 +37,8 @@ RUN source venv/bin/activate && \
     python3 -m pip install numpy --pre torch torchvision torchaudio --force-reinstall --index-url https://download.pytorch.org/whl/nightly/cu117
 
 # layered so we can cache this result (also source again for consistency)
+# I don't specify torchcommand just in case it changes downstream, see
+#   https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/webui.sh#L173
 RUN apt-get update && \
     apt-get install -y libglib2.0-0 wget && \
     apt-get clean -y && \
