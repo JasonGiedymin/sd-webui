@@ -12,6 +12,7 @@ if [ -z "$(which huggingface-cli)" ]; then
   source ./.venv/bin/activate
 fi;
 
+export IMAGE=${IMAGE:-"sd-amd"}
 export VERSION=${VERSION:-"2"}
 
 clean_vols() {
@@ -32,7 +33,7 @@ prep_vols() {
   ## /sd/tmp to /sd/extensions
   # mkdir -vp $(pwd)/volumes/extensions
 
-  container_id=$(docker create sd:${VERSION})
+  container_id=$(docker create --env UID=$(id -u) --env GID=$(id -g) ${IMAGE}:${VERSION})
   echo "Started base container [$container_id] for file copy ..."
   
   echo "Copying venv files ..."
@@ -45,6 +46,10 @@ prep_vols() {
   docker rm -v $container_id
   echo "Size: $(du -h -d 0 ./volumes/)"
   echo "Done."
+
+  # ensure user owns all these files
+  # helps if user had to use sudo for cleaning
+  chown $USER:$USER -R $(pwd)/volumes/
 }
 
 clean_models() {
@@ -64,6 +69,8 @@ docker_command() {
   # -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
   cat <<EOF
   docker run -it --rm --name=sd-webui \
+    --env UID=$(id -u) --env GID=$(id -g) \
+    --user ${UID}:${GID} \
     --network=host \
     --device=/dev/kfd \
     --device=/dev/dri \
@@ -84,7 +91,7 @@ docker_command() {
     -v $(pwd)/model_cache:/sd/model_cache \
     -v $(pwd)/models:/sd/models/Stable-diffusion \
     -v $(pwd)/docker/patches:/sd/patches \
-    sd:${VERSION} ${cmd}
+    ${IMAGE}:${VERSION} ${cmd}
 EOF
 }
 
@@ -93,16 +100,16 @@ usage() {
 
   Usage:
 
-    ./run {help|prep|build|ui|models|clean|reset|test|config}
+    ./run {help|build|ui|models|clean|prep|reset|test|config}
 
     ------------------------------------------------------------------
     help   - this usage screen
     build  - build a new docker image
-    prep   - prep files, useful if you need to refresh from a new build
     ui     - loads the ui
     models - downloads and links models
-    clean  - cleans out volumes only
-    reset  - resets volumes by running clean and prep
+    clean  - cleans out volumes only (not model cache) - do this for venv issues
+    prep   - prep files, useful if you need to refresh from a new build
+    reset  - resets volumes by running clean and prep commands
     shell  - runs a shell that bypasses the entrypoint for manual work
     config - test the config
 
@@ -124,7 +131,7 @@ run_config_check() {
 }
 
 run_build() {
-  docker build --tag sd:${VERSION} ./
+  docker build --tag "${IMAGE}:${VERSION}" -f Dockerfile ./
 }
 
 run() {

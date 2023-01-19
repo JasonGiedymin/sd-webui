@@ -1,5 +1,18 @@
 # Setup
 
+## StableDiffusion For AMD
+
+- Compatible with AMD (verified on a 6900xt + rocM)
+- Reasonably fast, 2 seconds for a 512x512
+- Uses docker bind mounts for fast startup time
+- Comes with a unique script download models (it's very POC)
+
+Caveats:
+
+  - I've since moved to work on NVidia based cuda implementations and tried to back port some work, but have not
+    verified the release :-)
+  - Requires Linux (sorry mac, and windows users!)
+
 ## TLDR
 
 `python3 -m venv .venv`

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#
+# This script is a POC written in 15 min increments over time.
+# It needs to be rewritten completely.
+#
 
 import argparse
 import os
