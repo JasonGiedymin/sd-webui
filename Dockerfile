@@ -3,16 +3,14 @@ WORKDIR /opt
 RUN git clone --depth 1 https://github.com/AUTOMATIC1111/stable-diffusion-webui
 WORKDIR /opt/stable-diffusion-webui
 
-FROM nvidia/cuda:11.7.1-devel-ubuntu22.04
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \
     REQS_FILE='requirements.txt'
 
-COPY --from=builder /opt/stable-diffusion-webui /sd
-WORKDIR /sd
-
 SHELL ["/bin/bash", "-c"]
+USER root
 
 # Base layer
 RUN apt-get update && \
@@ -20,8 +18,17 @@ RUN apt-get update && \
                        git build-essential autoconf libtool pkg-config \
                        make unzip autoconf libsm6 libxext6 ffmpeg vim && \
     apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/* && \
-    python3 -m venv venv && \
+    rm -rf /var/lib/apt/lists/*
+
+# Setup repo and user
+COPY --from=builder /opt/stable-diffusion-webui /sd
+WORKDIR /sd
+RUN groupadd sduser && \
+    useradd -r -u 1000 --create-home -g sduser sduser
+RUN chown -R sduser:sduser /sd
+USER sduser
+
+RUN python3 -m venv venv && \
     source venv/bin/activate && \
     python3 -m pip install --upgrade pip wheel
 
@@ -31,15 +38,18 @@ RUN apt-get update && \
 
 # layered so we can cache this result, this op takes a long time
 RUN source venv/bin/activate && \
-    python3 -m pip install numpy --pre torch torchvision torchaudio --force-reinstall --index-url https://download.pytorch.org/whl/nightly/cu117
+    python3 -m pip install torch torchvision triton
+    # python3 -m pip install numpy --pre torch torchvision torchaudio --force-reinstall --index-url https://download.pytorch.org/whl/nightly/cu117
 
 # layered install of xformers as there can be issues
 RUN source venv/bin/activate && \
     git clone --depth 1 https://github.com/facebookresearch/xformers.git && \
     cd xformers && \
     git submodule update --init --recursive && \
-    python3 -m pip install -r requirements.txt && \
-    python3 -m pip install -e .
+    python3 -m pip install ninja && \
+    python3 -m pip install -r requirements.txt
+
+#    python3 -m pip install -e .
     
 # RUN source venv/bin/activate && \
 #     python3 -m pip install -U ninja && \
@@ -47,8 +57,7 @@ RUN source venv/bin/activate && \
 
 # layered requirements, we can change these and build quickly from the above being cached
 RUN source venv/bin/activate && \
-    python3 -m pip install -r requirements.txt && \
-    python3 -m pip freeze | grep xformers
+    python3 -m pip install -r requirements.txt
 
 COPY docker/entrypoint.sh /sd/entrypoint.sh
 

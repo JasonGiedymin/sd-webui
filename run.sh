@@ -12,7 +12,8 @@ if [ -z "$(which huggingface-cli)" ]; then
   source ./.venv/bin/activate
 fi;
 
-export VERSION=${VERSION:-"2"}
+export IMAGE=${IMAGE:-"sd-nvidia"}
+export VERSION=${VERSION:-"3"}
 
 clean_vols() {
   echo "Cleaning up volumes ..."
@@ -21,6 +22,7 @@ clean_vols() {
 
 prep_vols() {
   echo "Prepping volumes ..."
+  mkdir -vp $(pwd)/volumes/xformers
   mkdir -vp $(pwd)/volumes/venv
   mkdir -vp $(pwd)/volumes/repositories
   mkdir -vp $(pwd)/volumes/models
@@ -32,11 +34,15 @@ prep_vols() {
   ## /sd/tmp to /sd/extensions
   # mkdir -vp $(pwd)/volumes/extensions
 
-  container_id=$(docker create sd:${VERSION})
+  container_id=$(docker create --env UID=$(id -u) --env GID=$(id -g) --user ${UID}:${GID} ${IMAGE}${VERSION})
   echo "Started base container [$container_id] for file copy ..."
   
   echo "Copying venv files ..."
   docker cp $container_id:/sd/venv/ $(pwd)/volumes/
+  echo "Copying xformers files ..."
+  docker cp $container_id:/sd/xformers/ $(pwd)/volumes/
+  echo "Copying models files ..."
+  docker cp $container_id:/sd/models/ $(pwd)/volumes/
 
   # echo "Copying repository files ..."
   # docker cp $container_id:/sd/repositories/ $(pwd)/volumes/repositories
@@ -64,21 +70,20 @@ download_models() {
 }
 
 docker_command() {
-  # -v $(pwd)/volumes/extensions:/sd/extensions \
-  # -v $(pwd)/model_cache:/sd/models/Stable-diffusion/model_cache \
-  #  --device=/dev/kfd \
-  #  --device=/dev/dri \
-  #  --group-add=video \
-  #  --ipc=host \
-  #  --cap-add=SYS_PTRACE \
-  #  --security-opt seccomp=unconfined \
+  # Run as root for now ...
+  # --env UID=$(id -u) --env GID=$(id -g) \
+  # --user ${UID}:${GID} \
+
   cat <<EOF
   docker run -it --rm --name=sd-webui-nvidia \
+    --env UID=$(id -u) --env GID=$(id -g) \
+    --user ${UID}:${GID} \
     --gpus all \
     --network=host \
     -e HF_HOME=/sd/.cache \
     -e HUGGING_FACE_HUB_TOKEN="$HF_TOKEN_RO" \
     -v $(pwd)/docker/entrypoint.sh:/sd/entrypoint.sh \
+    -v $(pwd)/volumes/xformers:/sd/xformers \
     -v $(pwd)/volumes/venv:/sd/venv \
     -v $(pwd)/volumes/repositories:/sd/repositories \
     -v $(pwd)/volumes/models:/sd/models \
@@ -90,7 +95,7 @@ docker_command() {
     -v $(pwd)/models:/sd/models/Stable-diffusion \
     -v $(pwd)/docker/patches:/sd/patches \
     ${entrypoint_bypass} \
-    sd:${VERSION} ${cmd}
+    ${IMAGE}${VERSION} ${cmd}
 EOF
 }
 
@@ -108,7 +113,7 @@ usage() {
     models - downloads and links models
     clean  - cleans out volumes only (not model cache) - do this for venv issues
     prep   - prep files, useful if you need to refresh from a new build
-    reset  - resets volumes by running clean and prep commands
+    reset  - resets volumes by running clean and prep commands (may need run with sudo)
     shell  - runs a shell that bypasses the entrypoint for manual work
     config - test the config
 
@@ -130,7 +135,7 @@ run_config_check() {
 }
 
 run_build() {
-  docker build --tag sd:${VERSION} -f Dockerfile ./
+  docker build --tag ${IMAGE}${VERSION} -f Dockerfile ./
 }
 
 run() {
