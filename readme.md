@@ -11,7 +11,41 @@ sudo amdgpu-uninstall
 sudo apt-get purge amdgpu-install
 sudo reboot
 
-sudo apt-get install -y nvidia-driver-525 nvidia-dkms-525
+sudo apt-get install -y nvidia-driver-530 nvidia-dkms-530
+# don't do this!
+# sudo apt-get autoremove -y
+
+# install cuda and tools for nvcc
+sudo apt-get install -y cuda nvidia-cuda-toolkit
+
+# to clear any locks or holds:
+# sudo dpkg --clear-selections
+# lock nvidia drivers from uninstalling using dpkg
+# echo "nvidia-driver-530 hold" | sudo dpkg --set-selections
+# echo "nvidia-dkms-530 hold" | sudo dpkg --set-selections
+# echo "nvidia-cuda-toolkit hold" | sudo dpkg --set-selections
+# echo "nvidia-gds hold" | sudo dpkg --set-selections
+
+# OR using apt-mark hold
+sudo apt-mark hold nvidia-driver-530
+sudo apt-mark hold nvidia-dkms-530
+sudo apt-mark hold nvidia-cuda-toolkit
+sudo apt-mark hold nvidia-gds
+# show holds
+sudo apt-mark showhold
+# to clear any locks or holds:
+sudo apt-mark unhold nvidia-driver-530
+sudo apt-mark unhold nvidia-dkms-530
+sudo apt-mark unhold nvidia-cuda-toolkit
+sudo apt-mark unhold nvidia-gds
+
+## Basic cli tests
+which nvidia-smi
+sudo nvidia-smi
+which nvcc
+nvcc --help
+
+# delete key
 sudo apt-key del 7fa2af80
 sudo reboot
 
@@ -38,9 +72,33 @@ sudo systemctl restart docker
 
 # run test image, should see a gpu with specs
 sudo docker run --rm --gpus all --name test nvidia/cuda:11.6.2-base-ubuntu20.04 nvidia-smi
+
+# complete reinstall, broken up by commands as each step is slow
+# sudo dpkg --clear-selections
+sudo apt-get install -y nvidia-driver-530 nvidia-dkms-530
+sudo apt-get install -y cuda nvidia-cuda-toolkit
+sudo apt-get install cuda
+sudo apt-get install nvidia-gds
+
+# OR using apt-mark hold
+sudo apt-mark hold nvidia-driver-530
+sudo apt-mark hold nvidia-dkms-530
+sudo apt-mark hold nvidia-cuda-toolkit
+sudo apt-mark hold nvidia-gds
+# show holds
+sudo apt-mark showhold
+# to clear any locks or holds:
+sudo apt-mark unhold nvidia-driver-530
+sudo apt-mark unhold nvidia-dkms-530
+sudo apt-mark unhold nvidia-cuda-toolkit
+sudo apt-mark unhold nvidia-gds
+
+
 ```
 
 ## TLDR
+
+Install nvidia drivers and proceed with the below.
 
 `python3 -m venv .venv`
 
@@ -56,8 +114,11 @@ pip install -r requirements.txt
 
 # supply env
 
-./download.sh
-./build.sh
+# download models
+./run.sh download
+
+# build image(s)
+./run.sh build
 
 deactivate
 exit
@@ -93,11 +154,11 @@ cp env.sample env
 Models are auto downloaded from build but you can run the download manually.
 
 ```shell
-./download.sh
+./run download
 ```
 
 ## Step 4 - Build
 
 ```shell
-./build.sh
+./run.sh build
 ```
