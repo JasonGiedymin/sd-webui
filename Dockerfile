@@ -3,7 +3,9 @@ WORKDIR /opt
 RUN git clone --depth 1 https://github.com/AUTOMATIC1111/stable-diffusion-webui
 WORKDIR /opt/stable-diffusion-webui
 
-FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
+# Soon...
+# FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
+FROM nvidia/cuda:11.7.1-devel-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \

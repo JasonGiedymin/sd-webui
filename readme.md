@@ -249,3 +249,9 @@ Models are auto downloaded from build but you can run the download manually.
 ```shell
 ./run.sh build
 ```
+
+## Step 5 - Run
+
+```shell
+./run.sh ui
+```
