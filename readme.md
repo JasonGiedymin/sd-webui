@@ -1,43 +1,127 @@
 # Setup
 
+You can follow the easy or manual instructions.
+
+
+## Complete Purge
+
+Before starting, you may need to complete purge drivers.
+
+```shell
+sudo apt-get remove --purge nvidia\*
+sudo apt-get autoremove -y
+# you must reboot
+reboot
+```
+
+## Easy Install
+
+Follow [these instructions](https://developer.nvidia.com/cuda-downloads?target_os=Linux)
+
+Current Instructions for Ubuntu 22.04.
+
+> Remember to reboot after the install else the display will continue to use the default resolution.
+
+```shell
+wget https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.runsudo
+
+sh cuda_12.2.0_535.54.03_linux.run
+```
+
+After install you'll see the following message:
+
+```text
+Please make sure that
+ -   PATH includes /usr/local/cuda-12.2/bin
+ -   LD_LIBRARY_PATH includes /usr/local/cuda-12.2/lib64, or, add /usr/local/cuda-12.2/lib64 to /etc/ld.so.conf and run ldconfig as root
+
+To uninstall the CUDA Toolkit, run cuda-uninstaller in /usr/local/cuda-12.2/bin
+To uninstall the NVIDIA Driver, run nvidia-uninstall
+Logfile is /var/log/cuda-installer.log
+```
+
+
+### Modify Path
+
+Until you make this change, you may not be able to run nvcc.
+
+> Remember to start a new shell after modifying the path.
+
+```shell
+export PATH=$PATH:/usr/local/cuda-12.2/bin
+```
+
+
+### Basic cli tests
+```shell
+which nvidia-smi
+nvidia-smi
+which nvcc
+nvcc --help
+```
+
+
+### Install Nvidia Docker
+
+```shell
+sudo apt-get install -y nvidia-docker2
+# It's very important to restart the docker service!
+sudo systemctl restart docker
+```
+
+> You may need to visit this docker [hub page](https://hub.docker.com/r/nvidia/cuda) to get the latest image.
+
+```shell
+# run test image, should see a gpu with specs
+sudo docker run --rm --gpus all --name test nvidia/cuda:12.2.0-base-ubuntu22.04 nvidia-smi
+```
+
+# Manual Setup
+
 ## Pre Reqs
 
 1. Uninstall amd components
 1. Install Nvidia drivers
 1. Install Nvidia Docker tool kit: `https://github.com/NVIDIA/nvidia-docker`
 
+
+## Setup
+
 ```shell
 sudo amdgpu-uninstall
 sudo apt-get purge amdgpu-install
 sudo reboot
 
-sudo apt-get install -y nvidia-driver-530 nvidia-dkms-530
+sudo apt-get install -y nvidia-driver-535 nvidia-dkms-535
 # don't do this!
 # sudo apt-get autoremove -y
 
 # install cuda and tools for nvcc
 sudo apt-get install -y cuda nvidia-cuda-toolkit
 
+# OR using apt-mark hold
+sudo apt-mark hold nvidia-driver-530
+sudo apt-mark hold nvidia-dkms-530
+sudo apt-mark hold nvidia-cuda-toolkit
+sudo apt-mark hold nvidia-gds
+
+# show holds
+sudo apt-mark showhold
+
 # to clear any locks or holds:
-# sudo dpkg --clear-selections
+sudo apt-mark unhold nvidia-driver-530
+sudo apt-mark unhold nvidia-dkms-530
+sudo apt-mark unhold nvidia-cuda-toolkit
+sudo apt-mark unhold nvidia-gds
+
 # lock nvidia drivers from uninstalling using dpkg
 # echo "nvidia-driver-530 hold" | sudo dpkg --set-selections
 # echo "nvidia-dkms-530 hold" | sudo dpkg --set-selections
 # echo "nvidia-cuda-toolkit hold" | sudo dpkg --set-selections
 # echo "nvidia-gds hold" | sudo dpkg --set-selections
 
-# OR using apt-mark hold
-sudo apt-mark hold nvidia-driver-530
-sudo apt-mark hold nvidia-dkms-530
-sudo apt-mark hold nvidia-cuda-toolkit
-sudo apt-mark hold nvidia-gds
-# show holds
-sudo apt-mark showhold
 # to clear any locks or holds:
-sudo apt-mark unhold nvidia-driver-530
-sudo apt-mark unhold nvidia-dkms-530
-sudo apt-mark unhold nvidia-cuda-toolkit
-sudo apt-mark unhold nvidia-gds
+# sudo dpkg --clear-selections
 
 ## Basic cli tests
 which nvidia-smi
@@ -96,7 +180,7 @@ sudo apt-mark unhold nvidia-gds
 
 ```
 
-## TLDR
+## Development TLDR
 
 Install nvidia drivers and proceed with the below.
 
@@ -123,6 +207,9 @@ pip install -r requirements.txt
 deactivate
 exit
 ```
+
+
+## Running this project
 
 ## Step 1 - venv
 
